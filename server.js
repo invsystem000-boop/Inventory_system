@@ -11,12 +11,15 @@ const allowedOrigins = [
   'http://localhost:3001',
   'http://127.0.0.1:3000',
   'http://127.0.0.1:3001',
+  'https://inventory-system-a5kh.onrender.com',
+  'https://www.inventory-system-a5kh.onrender.com',
   'null'
 ];
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    const isAllowedRenderOrigin = typeof origin === 'string' && origin.endsWith('.onrender.com');
+    if (!origin || allowedOrigins.includes(origin) || isAllowedRenderOrigin) {
       callback(null, true);
       return;
     }
