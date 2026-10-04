@@ -1,0 +1,52 @@
+{
+  "name": "inventory-importer",
+  "version": "1.0.0",
+  "description": "Inventory management app with MongoDB and Excel import/export",
+  "main": "main.js",
+  "scripts": {
+    "import": "node scripts/reimport_with_header_mapping.js",
+    "serve": "node server.js",
+    "start": "node server.js",
+    "dev": "node server.js & start microsoft-edge:http://localhost:3000",
+    "build": "electron-builder",
+    "dist": "electron-builder"
+  },
+  "dependencies": {
+    "axios": "^1.4.0",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "digest-fetch": "^1.0.1",
+    "dotenv": "^16.1.4",
+    "express": "^4.22.2",
+    "mongodb": "^5.9.2",
+    "mongodb-memory-server": "^8.11.0",
+    "multer": "^2.3.0",
+    "xlsx": "^0.18.0"
+  },
+  "devDependencies": {
+    "electron": "^44.3.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.inventorydemo.app",
+    "productName": "Inventory Demo",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!**/*.md",
+      "!dist/**",
+      "!**/.git/**",
+      "!**/.vscode/**"
+    ],
+    "win": {
+      "target": "nsis",
+      "artifactName": "InventoryDemo-${version}.exe"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

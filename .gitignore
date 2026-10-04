@@ -1,0 +1,30 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Python
+.venv/
+__pycache__/
+
+# MongoDB
+MongoDB/
+mongodb-database-tools-windows-x86_64-100.18.0/
+
+# Executables / large generated files
+*.exe
+*.pdb
+*.asar
+
+# Logs
+*.log
+
+# OS files
+Thumbs.db
+.DS_Store

@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login — Inventory Demo</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="stylesheet" href="login.css">
+  </head>
+  <body>
+    <div class="login-screen">
+      <div class="login-card">
+        <div class="login-layout">
+          <div class="login-panel">
+            <div class="brand">
+              <div class="logo">RENREAMIC TRUCK PARTS TRADING</div>
+              <h2>Login to Your Account</h2>
+              <p>Welcome back — please sign in to continue</p>
+            </div>
+
+            <div class="form-row">
+          <input id="username" type="text" placeholder="Email or username" />
+          <input id="password" type="password" placeholder="Password" />
+
+          <!-- Local selector placed under password to avoid overlap -->
+          <div class="db-row">
+            <select id="localSelect" aria-label="Local">
+              <option value="calamba">Calamba</option>
+              <option value="bicol">Bicol</option>
+              <option value="quezon">Quezon</option>
+            </select>
+          </div>
+
+          <div class="controls">
+            <div class="left helper-row">
+              <label class="checkbox-label"><input id="remember" type="checkbox" /> Remember me</label>
+            </div>
+            <a href="#" id="forgotLink" title="Contact admin for password reset assistance">Need help? Contact admin</a>
+          </div>
+
+          <div class="btn-row">
+            <button id="loginBtn" class="btn-login">Log In</button>
+            <span id="loginResult" class="login-result"></span>
+          </div>
+        </div>
+
+            <div class="small-footer">
+              <div>Don't have an account? <a href="#" id="registerLink">Register account</a></div>
+              <div class="site-badge">truckerportal.com</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Register modal -->
+        <div id="registerModal" class="modal hidden">
+          <div class="modal-content">
+            <h3>Create Account</h3>
+            <div class="form-row">
+              <input id="regName" type="text" placeholder="Full name" />
+              <input id="regUsername" type="text" placeholder="Username or email" />
+              <input id="regPassword" type="password" placeholder="Password" />
+              <input id="regPasswordConfirm" type="password" placeholder="Confirm password" />
+              <div id="regError" class="reg-error"></div>
+              <div class="modal-actions">
+                <button id="regCancel" class="btn-login btn-cancel">Cancel</button>
+                <button id="regSubmit" class="btn-login">Register</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="contactModal" class="modal hidden" aria-hidden="true">
+          <div class="contact-modal-content" role="dialog" aria-modal="true" aria-labelledby="contactModalTitle">
+            <h3 id="contactModalTitle">Password Help</h3>
+            <p class="contact-message">Please contact:</p>
+            <div class="contact-details">
+              <div><strong>Admin Name:</strong> Admin Office</div>
+              <div><strong>Email:</strong> admin@renreamic.com</div>
+              <div><strong>Contact:</strong> 0917-123-4567</div>
+            </div>
+            <div class="modal-actions contact-actions">
+              <button id="contactClose" class="btn-login">OK</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const stalePorts = ['3001', '3002', '5000', '5001', '5002'];
+      const currentPort = window.location && window.location.port ? String(window.location.port) : '';
+      if (currentPort && stalePorts.includes(currentPort)) {
+        const targetUrl = `${window.location.protocol}//${window.location.hostname}:3000${window.location.pathname}${window.location.search}`;
+        window.location.replace(targetUrl);
+      }
+
+      const API_BASE = (window.location && window.location.origin) ? window.location.origin : 'http://localhost:3000';
+      const LOCATION_DATABASES = { calamba: 'sample', bicol: 'sample2', quezon: 'sample3' };
+      const AUTH_DATABASE = 'accounts';
+      const localSelect = document.getElementById('localSelect');
+      const apiBaseSpan = document.getElementById('apiBase');
+      if (apiBaseSpan) apiBaseSpan.textContent = API_BASE;
+
+      function getSelectedDb(){
+        const local = (localSelect && localSelect.value) ? localSelect.value : 'calamba';
+        return LOCATION_DATABASES[local] || 'sample';
+      }
+
+      function buildUrl(path, params={}){
+        const db = getSelectedDb();
+        const url = new URL(path, API_BASE+"/");
+        url.searchParams.set('db', db);
+        Object.entries(params).forEach(([k,v]) => { if (v!=null) url.searchParams.set(k, v); });
+        return url.toString();
+      }
+
+      function buildAuthUrl(path, params={}){
+        const url = new URL(path, API_BASE+"/");
+        url.searchParams.set('db', AUTH_DATABASE);
+        Object.entries(params).forEach(([k,v]) => { if (v!=null) url.searchParams.set(k, v); });
+        return url.toString();
+      }
+
+      // Login handler
+      const loginBtn = document.getElementById('loginBtn');
+      const loginResult = document.getElementById('loginResult');
+
+      loginBtn.addEventListener('click', async () => {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+
+        if (!username || !password) {
+          loginResult.textContent = '';
+          return;
+        }
+
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Processing...';
+        loginResult.textContent = '';
+
+        try{
+          const res = await fetch(buildAuthUrl('api/login'), {
+            method: 'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ username, password })
+          });
+          const body = await res.json().catch(()=>({}));
+          if(res.ok){ 
+            const sessionUser = {
+              _id: body._id || '',
+              username: body.username || username,
+              name: body.name || '',
+              role: String(body.role || 'user').toLowerCase(),
+              verified: Boolean(body.verified)
+            };
+            localStorage.setItem('inventoryUser', JSON.stringify(sessionUser));
+            localStorage.setItem('inventoryLoggedIn', 'true');
+            window.location.replace('/index.html?db=' + encodeURIComponent(getSelectedDb()));
+            return;
+          }
+
+          const message = body && body.error ? body.error : 'Invalid username or password.';
+          loginResult.textContent = message === 'invalid credentials' ? 'Invalid username or password.' : message;
+          loginBtn.disabled = false;
+          loginBtn.textContent = 'Log In';
+        }catch(err){
+          loginResult.textContent = 'Login failed. Please try again.';
+          loginBtn.disabled = false;
+          loginBtn.textContent = 'Log In';
+        }
+      });
+
+      // Registration modal behavior
+      const registerLink = document.getElementById('registerLink');
+      const registerModal = document.getElementById('registerModal');
+      const regCancel = document.getElementById('regCancel');
+      const regSubmit = document.getElementById('regSubmit');
+      const regError = document.getElementById('regError');
+      const forgotLink = document.getElementById('forgotLink');
+      const contactModal = document.getElementById('contactModal');
+      const contactClose = document.getElementById('contactClose');
+
+      function showRegister(){ if (registerModal) registerModal.classList.remove('hidden'); regError.textContent = ''; }
+      function hideRegister(){ if (registerModal) registerModal.classList.add('hidden'); }
+      function showContactModal(){ if (contactModal) { contactModal.classList.remove('hidden'); contactModal.setAttribute('aria-hidden','false'); } }
+      function hideContactModal(){ if (contactModal) { contactModal.classList.add('hidden'); contactModal.setAttribute('aria-hidden','true'); } }
+
+      registerLink && registerLink.addEventListener('click', (e)=>{ e.preventDefault(); showRegister(); });
+      regCancel && regCancel.addEventListener('click', (e)=>{ e.preventDefault(); hideRegister(); });
+      contactClose && contactClose.addEventListener('click', () => hideContactModal());
+      forgotLink && forgotLink.addEventListener('click', (e)=>{
+        e.preventDefault();
+        showContactModal();
+      });
+
+      function isStrongPassword(p){
+        if (!p || p.length < 8) return false;
+        const hasLower = /[a-z]/.test(p);
+        const hasUpper = /[A-Z]/.test(p);
+        const hasDigit = /[0-9]/.test(p);
+        const hasSpecial = /[^A-Za-z0-9]/.test(p);
+        return hasLower && hasUpper && hasDigit && hasSpecial;
+      }
+
+      regSubmit && regSubmit.addEventListener('click', async (e)=>{
+        e.preventDefault();
+        const name = document.getElementById('regName').value.trim();
+        const username = document.getElementById('regUsername').value.trim();
+        const password = document.getElementById('regPassword').value;
+        const confirm = document.getElementById('regPasswordConfirm').value;
+
+        if (!name || !username || !password || !confirm){ regError.textContent = 'Please fill all fields.'; return; }
+        if (password !== confirm){ regError.textContent = 'Passwords do not match.'; return; }
+        if (!isStrongPassword(password)){ regError.textContent = 'Password must be 8+ chars with upper, lower, digit, special.'; return; }
+
+        regError.textContent = 'Creating account...';
+        try{
+          const res = await fetch(buildAuthUrl('api/collections/account'), {
+            method: 'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ name, username, password, role: 'user' })
+          });
+          const body = await res.json().catch(()=>({}));
+          if (res.ok){
+            regError.classList.remove('error');
+            regError.classList.add('success');
+            regError.textContent = 'Account created. You can log in.';
+            setTimeout(()=>{ hideRegister(); }, 1000);
+          } else {
+            regError.classList.remove('success');
+            regError.classList.add('error');
+            regError.textContent = body.error || 'Registration failed';
+          }
+          }catch(err){
+            regError.classList.remove('success');
+            regError.classList.add('error');
+            regError.textContent = 'Error creating account';
+          }
+      });
+    </script>
+  </body>
+</html>

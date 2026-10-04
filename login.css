@@ -1,0 +1,108 @@
+/* Blue-centered login design */
+:root{--bg:#1290ff;--bg-dark:#0f7be6;--card:#ffffff;--accent:#0b63d6}
+html,body{height:100%}
+.login-screen::before{content:'';position:fixed;inset:0;z-index:-2;background:rgba(6,45,92,0.35)}
+body{margin:0;font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background-color:var(--bg);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+
+/* Background image (place your image at assets/login-bg.jpg) */
+body{
+	background-image: url('assets/login-bg.jpg');
+	background-size: cover;
+	background-position: center center;
+	background-repeat: no-repeat;
+}
+
+/* darker overlay to keep card readable */
+.login-screen::before{content:'';position:fixed;inset:0;z-index:-1;background:linear-gradient(rgba(6,45,92,0.35),rgba(6,45,92,0.35));}
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px}
+.login-card{width:700px;max-width:96vw;background:var(--card);border-radius:12px;box-shadow:0 18px 40px rgba(2,6,23,0.18);padding:30px;position:relative}
+.login-layout{display:flex;flex-direction:column;gap:16px}
+.login-panel{flex:1;min-width:0}
+.brand{display:flex;flex-direction:column;align-items:center;margin-bottom:18px}
+.brand .logo{min-height:48px;border-radius:8px;background:linear-gradient(135deg,#fff9,#ffffff22);display:flex;align-items:center;justify-content:center;color:var(--accent);font-weight:800;font-size:20px;padding:8px 12px;text-align:center}
+.brand h2{margin:12px 0 0;font-size:20px;color:#0b3b6b}
+.brand p{margin:6px 0 0;font-size:13px;color:#6b7b90}
+.form-row{display:flex;flex-direction:column;gap:12px;margin-top:8px}
+input[type="text"],input[type="password"]{width:100%;padding:12px 14px;border-radius:8px;border:1px solid #e6edf6;background:#fbfdff;font-size:14px;box-sizing:border-box}
+#username,#password{width:100%;min-height:48px}
+.controls{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.controls .left{display:flex;align-items:center;gap:8px}
+.controls a{font-size:12px;color:var(--accent);text-decoration:none}
+.btn-login{width:160px;padding:10px 14px;border-radius:8px;border:0;background:var(--accent);color:#fff;font-weight:600;cursor:pointer}
+.btn-login:disabled{background:#6ea7ef;cursor:wait;opacity:0.9}
+.small-footer{margin-top:18px;text-align:center;color:#6b7b90;font-size:13px}
+.site-badge{display:inline-block;margin-top:14px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,0.08);color:#fff;font-weight:600}
+.helper-row{display:flex;align-items:center;gap:8px}
+.checkbox-label{font-size:13px;color:#42506a}
+
+/* keep legacy elements hidden but available */
+.collections,.collection-docs,.api-block{display:none}
+
+/* Modal styles for registration */
+.modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,0.45);z-index:9999}
+.modal-content{width:420px;background:#fff;border-radius:10px;padding:20px;box-shadow:0 12px 30px rgba(2,6,23,0.2)}
+.modal-content h3{margin:0 0 10px;font-size:18px;color:#223348}
+.modal-content .form-row{gap:10px}
+.modal-content input{padding:10px 12px;border-radius:8px;border:1px solid #e6edf6}
+
+.contact-modal-content{
+  width:min(520px, 92vw);
+  background:linear-gradient(180deg, #ffffff, #f5f9ff);
+  color:#0f172a;
+  border-radius:12px;
+  padding:24px 22px 18px;
+  box-shadow:0 16px 36px rgba(2,6,23,0.2);
+  border:1px solid #dfeeff;
+  text-align:left;
+}
+.contact-modal-content h3{
+  margin:0 0 16px;
+  font-size:20px;
+  font-weight:800;
+  color:#0b3b6b;
+  text-align:center;
+}
+.contact-message{
+  margin:0 0 12px;
+  font-size:14px;
+  color:#334155;
+  text-align:center;
+}
+.contact-details{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  font-size:14px;
+  line-height:1.7;
+  color:#0f172a;
+  margin-bottom:18px;
+  text-align:left;
+  padding:12px 14px;
+  border-radius:10px;
+  background:#f8fbff;
+  border:1px solid #e2ecff;
+}
+.contact-details strong{color:#0b3b6b}
+.contact-actions{justify-content:center; display:flex; margin-top:8px;}
+
+/* logo styling for longer text */
+.logo{font-size:13px;padding:10px 12px;line-height:1.2;text-align:center}
+
+/* Make DB selector match input styles and be full-width */
+.db-row{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.db-row label{font-size:13px;color:#6b7b90}
+#localSelect{width:100%;padding:12px 14px;border-radius:8px;border:1px solid #e6edf6;background:#fbfdff;font-size:14px}
+
+/* Larger modal */
+.modal-content{width:560px;max-width:92vw}
+
+/* Ensure modal inputs follow same look */
+.modal-content input, .modal-content select{width:100%;box-sizing:border-box}
+
+/* Helpers moved from inline styles */
+.btn-row{display:flex;justify-content:center;margin-top:8px;gap:12px;align-items:center}
+.modal.hidden{display:none}
+.reg-error{color:#c53030;font-size:13px;min-height:18px}
+.reg-error.success{color:green}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px}
+.btn-cancel{background:#ddd;color:#222}
