@@ -3,9 +3,13 @@ let currentCollection = '';
 let recordsCache = [];
 let collectionLoadToken = 0;
 let collectionsLoadToken = 0;
-const PORTS_TO_TRY = [3000];
-const API_BASE_CANDIDATES = PORTS_TO_TRY.map(p => `http://localhost:${p}`);
-let API_BASE = API_BASE_CANDIDATES[0];
+const PORTS_TO_TRY = [3000, 3001, 3002, 5000, 5001, 5002];
+const DEFAULT_PAGE_ORIGIN = (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin !== 'null') ? window.location.origin : 'http://localhost:3000';
+const API_BASE_CANDIDATES = Array.from(new Set([
+  DEFAULT_PAGE_ORIGIN,
+  ...PORTS_TO_TRY.map(p => `http://localhost:${p}`)
+].filter(Boolean)));
+let API_BASE = DEFAULT_PAGE_ORIGIN;
 const LOCATION_DATABASES = {
   calamba: 'sample',
   bicol: 'sample2',
@@ -57,15 +61,20 @@ function buildApiUrl(path, params = {}) {
 }
 
 async function resolveApiBase() {
-  // If the UI was loaded from a specific port (e.g., via the packaged app), prefer that first
+  const pageOrigin = (window && window.location && window.location.origin && window.location.origin !== 'null') ? window.location.origin : null;
   const pageHost = (window && window.location && window.location.hostname) ? window.location.hostname : 'localhost';
   const pagePort = (window && window.location && window.location.port) ? Number(window.location.port) : null;
 
   const candidates = [];
+  if (pageOrigin) {
+    candidates.push(pageOrigin);
+  }
   if (pagePort) {
     candidates.push(`${window.location.protocol}//${pageHost}:${pagePort}`);
   }
-  for (const base of API_BASE_CANDIDATES) candidates.push(base);
+  for (const base of API_BASE_CANDIDATES) {
+    if (!candidates.includes(base)) candidates.push(base);
+  }
 
   for (const base of candidates) {
     try {
@@ -80,7 +89,7 @@ async function resolveApiBase() {
     }
   }
 
-  API_BASE = API_BASE_CANDIDATES[0];
+  API_BASE = DEFAULT_PAGE_ORIGIN;
   return API_BASE;
 }
 
