@@ -3,17 +3,11 @@ let currentCollection = '';
 let recordsCache = [];
 let collectionLoadToken = 0;
 let collectionsLoadToken = 0;
-const PORTS_TO_TRY = [3000, 3001, 3002, 5000, 5001, 5002];
 const LOCAL_API_BASE = 'http://localhost:3000';
 const PRODUCTION_API_BASE = 'https://inventory-system-a5kh.onrender.com';
 const isLocalHost = !!(typeof window !== 'undefined' && window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
 const DEFAULT_API_BASE = isLocalHost ? LOCAL_API_BASE : PRODUCTION_API_BASE;
-const API_BASE_CANDIDATES = isLocalHost
-  ? Array.from(new Set([
-      DEFAULT_API_BASE,
-      ...PORTS_TO_TRY.map(p => `http://localhost:${p}`)
-    ].filter(Boolean)))
-  : [PRODUCTION_API_BASE];
+const API_BASE_CANDIDATES = isLocalHost ? [LOCAL_API_BASE] : [PRODUCTION_API_BASE];
 let API_BASE = DEFAULT_API_BASE;
 const LOCATION_DATABASES = {
   calamba: 'sample',
