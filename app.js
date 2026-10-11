@@ -1705,12 +1705,23 @@ function applyLocationVisibility() {
 }
 
 function enforceAuthGuard() {
+  const currentPath = window.location.pathname || '/';
+  const isLoginPage = currentPath === '/' || currentPath.endsWith('/login.html');
   const loggedIn = localStorage.getItem('inventoryLoggedIn') === 'true';
   const savedUser = localStorage.getItem('inventoryUser');
+
   if (!loggedIn || !savedUser) {
     localStorage.removeItem('inventoryUser');
     localStorage.removeItem('inventoryLoggedIn');
-    window.location.replace('/');
+
+    if (!isLoginPage) {
+      window.location.replace('/');
+    }
+    return;
+  }
+
+  if (isLoginPage) {
+    window.location.replace('/index.html');
     return;
   }
 
