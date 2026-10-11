@@ -1,3 +1,4 @@
+const fs = require('fs');
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
@@ -940,7 +941,21 @@ async function startServer() {
 
 startServer();
 
-// Fallback: serve index.html for root (in case static middleware didn't pick it up)
+function getLandingFilePath() {
+  const candidates = ['login.html', 'index.html', 'dashboard.html'];
+  for (const candidate of candidates) {
+    const resolved = path.join(__dirname, candidate);
+    if (fs.existsSync(resolved)) return resolved;
+  }
+  return null;
+}
+
+// Fallback: serve the first available landing file for root without crashing on Render
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'login.html'));
+  const landingFile = getLandingFilePath();
+  if (landingFile) {
+    return res.sendFile(landingFile);
+  }
+
+  return res.status(200).type('html').send(`<!doctype html><html><body><h1>Inventory app</h1></body></html>`);
 });
