@@ -3,7 +3,14 @@ const cors = require('cors');
 const multer = require('multer');
 const XLSX = require('xlsx');
 const { MongoClient, ObjectId, GridFSBucket } = require('mongodb');
-const { hashPassword, verifyPassword, stripSensitiveFields, normalizeVerifiedStatus } = require('./auth-utils');
+const {
+  hashPassword,
+  verifyPassword,
+  stripSensitiveFields,
+  normalizeVerifiedStatus,
+  createSessionToken,
+  verifySessionToken
+} = require('./auth-utils');
 
 const app = express();
 const allowedOrigins = [
@@ -41,6 +48,69 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // Load environment variables from .env when present
 require('dotenv').config();
+
+const SESSION_COOKIE_NAME = 'inventory_session';
+const SESSION_SECRET = process.env.SESSION_SECRET || 'inventory-session-secret-change-me';
+const SESSION_TTL_MS = 1000 * 60 * 60 * 8;
+
+function getSessionCookie(req) {
+  const rawCookie = req.headers.cookie || '';
+  const cookiePairs = rawCookie.split(';').map((entry) => entry.trim()).filter(Boolean);
+  const sessionCookie = cookiePairs.find((entry) => entry.startsWith(`${SESSION_COOKIE_NAME}=`));
+  if (!sessionCookie) return null;
+
+  const token = decodeURIComponent(sessionCookie.slice(SESSION_COOKIE_NAME.length + 1));
+  return token || null;
+}
+
+function setSessionCookie(res, token) {
+  res.cookie(SESSION_COOKIE_NAME, token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'None',
+    maxAge: SESSION_TTL_MS,
+    path: '/'
+  });
+}
+
+function clearSessionCookie(res) {
+  res.clearCookie(SESSION_COOKIE_NAME, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'None',
+    path: '/'
+  });
+}
+
+function getRequestUser(req) {
+  const token = getSessionCookie(req);
+  if (!token) return null;
+
+  const payload = verifySessionToken(token, SESSION_SECRET);
+  if (!payload || !payload.user || !payload.user.username) {
+    return null;
+  }
+
+  return payload.user;
+}
+
+function requireAuth(req, res, next) {
+  const user = getRequestUser(req);
+  if (!user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  req.user = user;
+  next();
+}
+
+function requireAdmin(req, res, next) {
+  if (!req.user || String(req.user.role || '').toLowerCase() !== 'admin') {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  next();
+}
 
 // Serve the frontend (index.html, app.js, styles.css, etc.) from the project root
 // Do not auto-serve `index.html` for the root so we can control the landing page.
@@ -114,7 +184,12 @@ async function ensureDatabaseForRequest(req) {
   return db;
 }
 
-app.get('/api/collections', async (req, res) => {
+app.post('/api/logout', (req, res) => {
+  clearSessionCookie(res);
+  return res.json({ ok: true });
+});
+
+app.get('/api/collections', requireAuth, async (req, res) => {
   try{
     const targetDb = await ensureDatabaseForRequest(req);
     const cols = await targetDb.listCollections().toArray();
@@ -125,7 +200,7 @@ app.get('/api/collections', async (req, res) => {
   }
 });
 
-app.post('/api/collections', async (req, res) => {
+app.post('/api/collections', requireAuth, async (req, res) => {
   try {
     const targetDb = await ensureDatabaseForRequest(req);
 
@@ -152,7 +227,7 @@ app.post('/api/collections', async (req, res) => {
   }
 });
 
-app.post('/api/collections/:name', async (req, res) => {
+app.post('/api/collections/:name', requireAuth, async (req, res) => {
   try {
     const collectionName = req.params.name;
     if (!collectionName) {
@@ -233,7 +308,7 @@ function normalizeReceiptRow(row) {
   return normalized;
 }
 
-app.post('/api/collections/:name/upload', upload.single('file'), async (req, res) => {
+app.post('/api/collections/:name/upload', requireAuth, upload.single('file'), async (req, res) => {
   try {
     const targetDb = await ensureDatabaseForRequest(req);
 
@@ -341,7 +416,7 @@ app.post('/api/collections/:name/upload', upload.single('file'), async (req, res
   }
 });
 
-app.post('/api/orders', async (req, res) => {
+app.post('/api/orders', requireAuth, async (req, res) => {
   try {
     const targetDb = await ensureDatabaseForRequest(req);
     const orderDb = targetDb;
@@ -405,7 +480,7 @@ app.post('/api/orders', async (req, res) => {
   }
 });
 
-app.post('/api/recordin', async (req, res) => {
+app.post('/api/recordin', requireAuth, async (req, res) => {
   try {
     const targetDb = await ensureDatabaseForRequest(req);
     const orderDb = targetDb;
@@ -450,7 +525,7 @@ app.post('/api/recordin', async (req, res) => {
   }
 });
 
-app.get('/api/recordin', async (req, res) => {
+app.get('/api/recordin', requireAuth, async (req, res) => {
   try {
     const targetDb = await ensureDatabaseForRequest(req);
     const orderDb = targetDb;
@@ -498,7 +573,7 @@ app.get('/api/recordin', async (req, res) => {
   }
 });
 
-app.get('/api/orders/history', async (req, res) => {
+app.get('/api/orders/history', requireAuth, async (req, res) => {
   try {
     const targetDb = await ensureDatabaseForRequest(req);
     const orderDb = targetDb;
@@ -646,6 +721,23 @@ app.post('/api/login', async (req, res) => {
       db: matchedDbName,
       collection: matchedCollection
     };
+
+    const sessionPayload = {
+      user: {
+        _id: matchedUser._id,
+        username: matchedUser.username,
+        name: matchedUser.name,
+        role: String(matchedUser.role || 'user').toLowerCase(),
+        verified: normalizeVerifiedStatus(matchedUser.verified),
+        db: matchedDbName,
+        collection: matchedCollection
+      },
+      exp: Date.now() + SESSION_TTL_MS
+    };
+
+    const sessionToken = createSessionToken(sessionPayload, SESSION_SECRET);
+    setSessionCookie(res, sessionToken);
+
     return res.json(stripSensitiveFields(safe));
   } catch (err) {
     console.error('Login error', err);
@@ -653,7 +745,11 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-app.get('/api/accounts', async (req, res) => {
+app.get('/api/session', requireAuth, async (req, res) => {
+  return res.json({ ok: true, user: req.user });
+});
+
+app.get('/api/accounts', requireAuth, async (req, res) => {
   try {
     const targetDbs = [AUTH_DB_NAME, 'sample', 'sample2', 'sample3'];
     const candidateCollections = ['account', 'accounts', 'accounts.account'];
@@ -708,7 +804,7 @@ app.get('/api/accounts', async (req, res) => {
   }
 });
 
-app.put('/api/accounts/:id', async (req, res) => {
+app.put('/api/accounts/:id', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { password, role, verified } = req.body || {};
@@ -765,7 +861,7 @@ app.put('/api/accounts/:id', async (req, res) => {
   }
 });
 
-app.get('/api/collections/:name', async (req, res) => {
+app.get('/api/collections/:name', requireAuth, async (req, res) => {
   try{
     const targetDb = await ensureDatabaseForRequest(req);
     const name = req.params.name;
@@ -778,7 +874,7 @@ app.get('/api/collections/:name', async (req, res) => {
   }
 });
 
-app.put('/api/collections/:name/:id', async (req, res) => {
+app.put('/api/collections/:name/:id', requireAuth, async (req, res) => {
   try{
     const targetDb = await ensureDatabaseForRequest(req);
 

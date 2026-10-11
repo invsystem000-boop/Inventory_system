@@ -136,7 +136,9 @@
 
         try{
           const res = await fetch(buildAuthUrl('api/login'), {
-            method: 'POST', headers:{'Content-Type':'application/json'},
+            method: 'POST',
+            headers:{'Content-Type':'application/json'},
+            credentials: 'include',
             body: JSON.stringify({ username, password })
           });
           const body = await res.json().catch(()=>({}));

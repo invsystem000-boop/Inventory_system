@@ -8,10 +8,12 @@ const LOCAL_API_BASE = 'http://localhost:3000';
 const PRODUCTION_API_BASE = 'https://inventory-system-a5kh.onrender.com';
 const isLocalHost = !!(typeof window !== 'undefined' && window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
 const DEFAULT_API_BASE = isLocalHost ? LOCAL_API_BASE : PRODUCTION_API_BASE;
-const API_BASE_CANDIDATES = Array.from(new Set([
-  DEFAULT_API_BASE,
-  ...PORTS_TO_TRY.map(p => `http://localhost:${p}`)
-].filter(Boolean)));
+const API_BASE_CANDIDATES = isLocalHost
+  ? Array.from(new Set([
+      DEFAULT_API_BASE,
+      ...PORTS_TO_TRY.map(p => `http://localhost:${p}`)
+    ].filter(Boolean)))
+  : [PRODUCTION_API_BASE];
 let API_BASE = DEFAULT_API_BASE;
 const LOCATION_DATABASES = {
   calamba: 'sample',
@@ -69,19 +71,28 @@ async function resolveApiBase() {
   const pagePort = (window && window.location && window.location.port) ? Number(window.location.port) : null;
 
   const candidates = [];
-  if (pageOrigin && (pageOrigin === PRODUCTION_API_BASE || pageOrigin === LOCAL_API_BASE)) {
-    candidates.push(pageOrigin);
+
+  if (isLocalHost) {
+    if (pageOrigin && (pageOrigin === PRODUCTION_API_BASE || pageOrigin === LOCAL_API_BASE)) {
+      candidates.push(pageOrigin);
+    }
+    if (pagePort && (pageHost === 'localhost' || pageHost === '127.0.0.1')) {
+      candidates.push(`${window.location.protocol}//${pageHost}:${pagePort}`);
+    }
+  } else {
+    candidates.push(PRODUCTION_API_BASE);
   }
-  if (pagePort && (pageHost === 'localhost' || pageHost === '127.0.0.1')) {
-    candidates.push(`${window.location.protocol}//${pageHost}:${pagePort}`);
-  }
+
   for (const base of API_BASE_CANDIDATES) {
     if (!candidates.includes(base)) candidates.push(base);
   }
 
   for (const base of candidates) {
     try {
-      const res = await fetch(`${base}/api/collections?db=${encodeURIComponent(getSelectedDatabaseName())}`, { cache: 'no-store' });
+      const res = await fetch(`${base}/api/collections?db=${encodeURIComponent(getSelectedDatabaseName())}`, {
+        cache: 'no-store',
+        credentials: 'include'
+      });
       if (res.ok) {
         API_BASE = base;
         console.log('Using API base:', API_BASE, 'database:', getSelectedDatabaseName());
@@ -1665,10 +1676,18 @@ if (recordsBtn) {
 
 const logoutBtn = document.getElementById('logoutBtn');
 if (logoutBtn) {
-  logoutBtn.addEventListener('click', () => {
-    localStorage.removeItem('inventoryUser');
-    localStorage.removeItem('inventoryLoggedIn');
-    window.location.replace('/');
+  logoutBtn.addEventListener('click', async () => {
+    try {
+      await fetch(`${API_BASE}/api/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      }).catch(() => null);
+    } finally {
+      localStorage.removeItem('inventoryUser');
+      localStorage.removeItem('inventoryLoggedIn');
+      document.cookie = 'inventory_session=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=None; Secure';
+      window.location.replace('/login.html');
+    }
   });
 }
 
@@ -1715,7 +1734,7 @@ function enforceAuthGuard() {
     localStorage.removeItem('inventoryLoggedIn');
 
     if (!isLoginPage) {
-      window.location.replace('/');
+      window.location.replace('/login.html');
     }
     return;
   }
@@ -2054,7 +2073,10 @@ async function fetchCollections(requestToken = collectionsLoadToken) {
   const base = await resolveApiBase();
   const dbName = getSelectedDatabaseName();
   try {
-    const res = await fetch(`${base}/api/collections?db=${encodeURIComponent(dbName)}`, { cache: 'no-store' });
+    const res = await fetch(`${base}/api/collections?db=${encodeURIComponent(dbName)}`, {
+      cache: 'no-store',
+      credentials: 'include'
+    });
     if (requestToken !== collectionsLoadToken) {
       return null;
     }
