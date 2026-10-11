@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inventory — Demo</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="stylesheet" href="styles.css" />
+            </thead>
+            <tbody></tbody>
+          </table>
+          <!-- Process Order Modal -->
+          <div id="lowStockModal" class="modal records-modal" aria-hidden="true">
+            <div class="modal-content low-stock-modal-content" role="dialog" aria-modal="true" aria-labelledby="lowStockTitle">
+              <div class="records-header-row">
+                <h2 id="lowStockTitle">Low Stock</h2>
+                <div class="records-header-actions">
+                  <button type="button" id="closeLowStockModal" class="toolbar-btn secondary">Close</button>
+                </div>
+              </div>
+              <div class="records-table-wrap">
+                <table class="records-table low-stock-table" aria-label="Low stock items">
+                  <thead>
+                    <tr>
+                      <th>Collection / Parts</th>
+                      <th>Model</th>
+                      <th>Part Number</th>
+                      <th>Stock</th>
+                    </tr>
+                  </thead>
+                  <tbody id="lowStockTableBody"></tbody>
+                </table>
+                <div id="lowStockEmptyState" class="records-empty">No low-stock items in this collection.</div>
+              </div>
+            </div>
+          </div>
+
+          <div id="recordsModal" class="modal records-modal" aria-hidden="true">
+            <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="recordsTitle">
+              <div class="records-header-row">
+                <h2 id="recordsTitle">Order Records</h2>
+                <div class="records-header-actions">
+                  <button type="button" id="exportRecordsBtn" class="toolbar-btn primary">Export Records</button>
+                  <button type="button" id="closeRecordsModal" class="toolbar-btn secondary">Close</button>
+                </div>
+              </div>
+              <div class="records-toolbar">
+                <div class="process-order-mode-toggle records-mode-toggle" aria-label="Record direction" role="switch" aria-checked="false" tabindex="0">
+                  <span class="toggle-option active" id="recordsModeIn">Order</span>
+                  <span class="toggle-option" id="recordsModeOut">Restock</span>
+                </div>
+                <input id="recordsCollectionFilter" type="text" placeholder="Filter parts" aria-label="Filter records by parts" />
+                <input id="recordsDateFilter" type="date" aria-label="Filter records by date" />
+              </div>
+              <div class="records-table-wrap">
+                <table class="records-table" aria-label="Saved order records">
+                  <thead>
+                    <tr id="recordsTableHead">
+                      <th>Client</th>
+                      <th>Date</th>
+                      <th>Collection</th>
+                      <th>Invoice Number</th>
+                      <th>Model</th>
+                      <th>Brand</th>
+                      <th>Made</th>
+                      <th>Part No</th>
+                      <th>Description</th>
+                      <th>Price</th>
+                      <th>Stock Bought</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recordsTableBody"></tbody>
+                </table>
+                <div id="recordsEmptyState" class="records-empty">No saved records yet.</div>
+              </div>
+              <div class="modal-actions records-bottom-actions">
+                <button type="button" class="toolbar-btn primary" disabled aria-hidden="true">Export Records</button>
+                <button type="button" class="toolbar-btn secondary" disabled aria-hidden="true">Close</button>
+              </div>
+            </div>
+          </div>
+          <div id="processModal" class="modal" aria-hidden="true">
+            <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="processTitle">
+              <div class="process-order-title-row">
+                <h2 id="processTitle">Process Order</h2>
+                <div class="process-order-mode-toggle" aria-label="Process order direction" role="switch" aria-checked="true" tabindex="0">
+                  <span class="toggle-option active" id="processOrderModeIn">Order</span>
+                  <span class="toggle-option" id="processOrderModeOut">Restock</span>
+                </div>
+              </div>
+              <div id="sampleTemplateContainer" class="sample-template-container">
+                <div class="process-order-header">
+                  <div class="process-order-header-column">
+                    <div class="process-order-header-row inline-top-row">
+                      <label class="process-order-field client-field"><span id="clientFieldLabel">Client:</span> <input id="clientName" type="text" placeholder="input client name" /></label>
+                      <label>Parts:
+                        <input
+                          id="processCollectionSelect"
+                          type="text"
+                          list="processCollectionOptions"
+                          placeholder="Type or select parts"
+                          aria-label="Select parts"
+                          autocomplete="off"
+                        />
+                        <datalist id="processCollectionOptions"></datalist>
+                      </label>
+                    </div>
+                    <div class="process-order-header-row inline-meta-row">
+                      <label class="process-order-field date-field">Date: <input id="clientDate" type="date" /></label>
+                      <label class="process-order-field invoice-field">Invoice Number: <input id="invoiceNumber" type="text" placeholder="invoice number" /></label>
+                    </div>
+                  </div>
+                  <div class="process-order-header-row process-order-header-row-right">
+                    <button id="addProcessRowBtn" class="add-row-btn" type="button" aria-label="Add order row">+</button>
+                  </div>
+                </div>
+                <table class="sample-template-table" id="sampleTemplateTable" aria-label="Sample legend table">
+                  <thead>
+                    <tr id="processOrderTableHead">
+                      <th>Model</th>
+                      <th>Brand / Made</th>
+                      <th>Part Number</th>
+                      <th>Stock</th>
+                      <th>Price</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><input class="sample-model-input" type="text" list="modelSuggestions" placeholder="Model" aria-label="Model placeholder" /></td>
+                      <td><input type="text" value="Brand / Made" aria-label="Brand / Made placeholder" /></td>
+                      <td><input type="text" value="Part Number" aria-label="Part Number placeholder" /></td>
+                      <td><input type="text" value="Stock" aria-label="Stock placeholder" class="total-input" /></td>
+                      <td><input type="text" value="Price" aria-label="Price placeholder" /></td>
+                      <td><input type="text" value="Description" aria-label="Description placeholder" /></td>
+                    </tr>
+                    <tr>
+                      <td><input class="sample-model-input" type="text" list="modelSuggestions" placeholder="Model" aria-label="Model blank input" /></td>
+                      <td><input type="text" aria-label="Brand blank input" /></td>
+                      <td><input type="text" aria-label="Part number blank input" /></td>
+                      <td><input type="text" aria-label="Stock blank input" class="total-input" /></td>
+                      <td><input type="text" aria-label="Price blank input" /></td>
+                      <td><input type="text" aria-label="Description blank input" /></td>
+                    </tr>
+                    <tr>
+                      <td><input class="sample-model-input" type="text" list="modelSuggestions" placeholder="Model" aria-label="Model blank input 2" /></td>
+                      <td><input type="text" aria-label="Brand blank input 2" /></td>
+                      <td><input type="text" aria-label="Part number blank input 2" /></td>
+                      <td><input type="text" aria-label="Stock blank input 2" class="total-input" /></td>
+                      <td><input type="text" aria-label="Price blank input 2" /></td>
+                      <td><input type="text" aria-label="Description blank input 2" /></td>
+                    </tr>
+                  </tbody>
+                </table>
+                <datalist id="modelSuggestions"></datalist>
+              </div>
+              <div class="modal-actions">
+                <button type="button" id="cancelProcess">Cancel</button>
+                <button type="button" id="convertSampleToPdf" class="toolbar-btn primary">Save Order</button>
+              </div>
+            </div>
+          </div>
+    <div id="collectionPromptModal" class="collection-prompt-modal" aria-hidden="true">
+      <div class="collection-prompt-dialog" role="dialog" aria-modal="true" aria-labelledby="collectionPromptTitle">
+        <h3 id="collectionPromptTitle">Enter new collection name:</h3>
+        <input id="collectionPromptInput" type="text" placeholder="Collection name" aria-label="Enter new collection name" />
+        <div class="collection-prompt-actions">
+          <button type="button" id="collectionPromptCancel" class="toolbar-btn secondary">Cancel</button>
+          <button type="button" id="collectionPromptOk" class="toolbar-btn primary">OK</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="statusPromptModal" class="collection-prompt-modal" aria-hidden="true">
+      <div class="collection-prompt-dialog" role="dialog" aria-modal="true" aria-labelledby="statusPromptTitle">
+        <h3 id="statusPromptTitle">Notice</h3>
+        <p id="statusPromptMessage" class="status-prompt-message"></p>
+        <div class="collection-prompt-actions">
+          <button type="button" id="statusPromptOk" class="toolbar-btn primary">OK</button>
+        </div>
+      </div>
+    </div>
+
+    <header class="topbar">
+      <div class="topbar-inner">
+        <h1>All Inventory</h1>
+        <div class="controls">
+          <input id="search" placeholder="Search products, location or ID" />
+          <input id="uploadFileInput" type="file" accept=".xlsx,.xls,.csv,.docx,.doc" hidden />
+          <button id="processOrderBtn" class="toolbar-btn primary" type="button">Process Order</button>
+          <button id="lowStockBtn" class="toolbar-btn warning" type="button">Low Stock</button>
+          <button id="recordsBtn" class="toolbar-btn secondary" type="button">Records</button>
+          <div class="location-switch" aria-label="Location selector" role="tablist" aria-orientation="horizontal">
+            <button type="button" class="location-switch-option active" data-location="calamba" role="tab" aria-selected="true" tabindex="0">Calamba</button>
+            <button type="button" class="location-switch-option" data-location="bicol" role="tab" aria-selected="false" tabindex="-1">Bicol</button>
+            <button type="button" class="location-switch-option" data-location="quezon" role="tab" aria-selected="false" tabindex="-1">Quezon</button>
+          </div>
+          <button id="logoutBtn" class="toolbar-btn danger" type="button">Log Out</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="floating-actions">
+      <button id="tutorialBtn" class="tutorial-float-btn" type="button" aria-label="Open tutorial">?</button>
+      <button id="profileBtn" class="profile-float-btn" type="button" aria-label="View user accounts">👤</button>
+    </div>
+
+    <div id="accountListModal" class="modal hidden" aria-hidden="true">
+      <div class="modal-content account-list-modal-content" role="dialog" aria-modal="true" aria-labelledby="accountListTitle">
+        <div class="records-header-row">
+          <h2 id="accountListTitle">Staff & Admin Accounts</h2>
+          <div class="records-header-actions">
+            <button type="button" id="closeAccountListModal" class="toolbar-btn secondary">Close</button>
+          </div>
+        </div>
+        <div class="records-table-wrap">
+          <table class="records-table account-list-table" aria-label="User accounts list">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Verified</th>
+                <th>Password</th>
+              </tr>
+            </thead>
+            <tbody id="accountListTableBody"></tbody>
+          </table>
+          <div id="accountListEmptyState" class="records-empty">No accounts found.</div>
+        </div>
+      </div>
+    </div>
+
+    <main class="workspace">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <input id="collectionSearch" type="text" placeholder="Search Parts" aria-label="Search Parts" />
+          <button id="addCollectionBtn" class="add-collection-btn" type="button" aria-label="Add Parts">+</button>
+        </div>
+        <ul id="collectionSelect" class="collection-list" aria-label="Parts list">
+          <li class="loading-item">Loading Parts…</li>
+        </ul>
+      </aside>
+
+      <section class="table-panel">
+        <div class="table-wrap">
+          <table id="inventory-table">
+            <thead>
+              <tr>
+                <th class="row-number-col add-row-col"><button id="addRowBtn" class="add-row-btn" type="button" aria-label="Add row">+</button></th>
+                <th>Model</th>
+                <th>Brand</th>
+                <th>Made</th>
+                <th>Part No.</th>
+                <th>Description</th>
+                <th>Size</th>
+                <th>Price</th>
+                <th>Stock on Hand</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
