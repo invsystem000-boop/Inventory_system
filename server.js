@@ -11,15 +11,26 @@ const allowedOrigins = [
   'http://localhost:3001',
   'http://127.0.0.1:3000',
   'http://127.0.0.1:3001',
+  'http://renreamictruckpartstrading.site',
+  'https://renreamictruckpartstrading.site',
+  'http://www.renreamictruckpartstrading.site',
+  'https://www.renreamictruckpartstrading.site',
+  'http://inventory-system-a5kh.onrender.com',
   'https://inventory-system-a5kh.onrender.com',
+  'http://www.inventory-system-a5kh.onrender.com',
   'https://www.inventory-system-a5kh.onrender.com',
   'null'
 ];
 
 app.use(cors({
   origin: (origin, callback) => {
-    const isAllowedRenderOrigin = typeof origin === 'string' && origin.endsWith('.onrender.com');
-    if (!origin || allowedOrigins.includes(origin) || isAllowedRenderOrigin) {
+    const isAllowedHostOrigin = typeof origin === 'string' && (
+      allowedOrigins.includes(origin)
+      || origin.endsWith('.onrender.com')
+      || origin.endsWith('renreamictruckpartstrading.site')
+      || origin.includes('renreamictruckpartstrading.site')
+    );
+    if (!origin || isAllowedHostOrigin) {
       callback(null, true);
       return;
     }

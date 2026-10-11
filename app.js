@@ -4,12 +4,15 @@ let recordsCache = [];
 let collectionLoadToken = 0;
 let collectionsLoadToken = 0;
 const PORTS_TO_TRY = [3000, 3001, 3002, 5000, 5001, 5002];
-const DEFAULT_PAGE_ORIGIN = (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin !== 'null') ? window.location.origin : 'http://localhost:3000';
+const LOCAL_API_BASE = 'http://localhost:3000';
+const PRODUCTION_API_BASE = 'https://inventory-system-a5kh.onrender.com';
+const isLocalHost = !!(typeof window !== 'undefined' && window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
+const DEFAULT_API_BASE = isLocalHost ? LOCAL_API_BASE : PRODUCTION_API_BASE;
 const API_BASE_CANDIDATES = Array.from(new Set([
-  DEFAULT_PAGE_ORIGIN,
+  DEFAULT_API_BASE,
   ...PORTS_TO_TRY.map(p => `http://localhost:${p}`)
 ].filter(Boolean)));
-let API_BASE = DEFAULT_PAGE_ORIGIN;
+let API_BASE = DEFAULT_API_BASE;
 const LOCATION_DATABASES = {
   calamba: 'sample',
   bicol: 'sample2',
@@ -66,10 +69,10 @@ async function resolveApiBase() {
   const pagePort = (window && window.location && window.location.port) ? Number(window.location.port) : null;
 
   const candidates = [];
-  if (pageOrigin) {
+  if (pageOrigin && (pageOrigin === PRODUCTION_API_BASE || pageOrigin === LOCAL_API_BASE)) {
     candidates.push(pageOrigin);
   }
-  if (pagePort) {
+  if (pagePort && (pageHost === 'localhost' || pageHost === '127.0.0.1')) {
     candidates.push(`${window.location.protocol}//${pageHost}:${pagePort}`);
   }
   for (const base of API_BASE_CANDIDATES) {
@@ -89,7 +92,7 @@ async function resolveApiBase() {
     }
   }
 
-  API_BASE = DEFAULT_PAGE_ORIGIN;
+  API_BASE = DEFAULT_API_BASE;
   return API_BASE;
 }
 
@@ -2060,6 +2063,8 @@ function isHiddenCollectionName(name) {
     || /\.files$|\.chunks$/i.test(name)
     || /sample[_-]?format/i.test(name)
     || /^upload$/i.test(name)
+    || /^security[_-]?probe$/i.test(name)
+    || /^security$/i.test(name)
     || /^orders?[_\s-]?history$/i.test(name)
     || /^orders?[_\s-]?history[23]$/i.test(name)
     || /^recordin$/i.test(name)

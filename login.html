@@ -46,7 +46,7 @@
 
             <div class="small-footer">
               <div>Don't have an account? <a href="#" id="registerLink">Register account</a></div>
-              <div class="site-badge">truckerportal.com</div>
+              <div class="site-badge">Made by Zaq Jessen T. Magana ©</div>
             </div>
           </div>
         </div>
@@ -87,14 +87,10 @@
     </div>
 
     <script>
-      const stalePorts = ['3001', '3002', '5000', '5001', '5002'];
-      const currentPort = window.location && window.location.port ? String(window.location.port) : '';
-      if (currentPort && stalePorts.includes(currentPort)) {
-        const targetUrl = `${window.location.protocol}//${window.location.hostname}:3000${window.location.pathname}${window.location.search}`;
-        window.location.replace(targetUrl);
-      }
-
-      const API_BASE = (window.location && window.location.origin) ? window.location.origin : 'http://localhost:3000';
+      const LOCAL_API_BASE = 'http://localhost:3000';
+      const PRODUCTION_API_BASE = 'https://inventory-system-a5kh.onrender.com';
+      const isLocalHost = !!(window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
+      const API_BASE = isLocalHost ? LOCAL_API_BASE : PRODUCTION_API_BASE;
       const LOCATION_DATABASES = { calamba: 'sample', bicol: 'sample2', quezon: 'sample3' };
       const AUTH_DATABASE = 'accounts';
       const localSelect = document.getElementById('localSelect');
