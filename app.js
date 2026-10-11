@@ -6,6 +6,7 @@ let collectionsLoadToken = 0;
 const LOCAL_API_BASE = 'http://localhost:3000';
 const PRODUCTION_API_BASE = 'https://inventory-system-a5kh.onrender.com';
 const isLocalHost = !!(typeof window !== 'undefined' && window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
+const isProductionHost = !isLocalHost;
 const DEFAULT_API_BASE = isLocalHost ? LOCAL_API_BASE : PRODUCTION_API_BASE;
 const API_BASE_CANDIDATES = isLocalHost ? [LOCAL_API_BASE] : [PRODUCTION_API_BASE];
 let API_BASE = DEFAULT_API_BASE;
@@ -60,7 +61,7 @@ function buildApiUrl(path, params = {}) {
 }
 
 async function resolveApiBase() {
-  if (!isLocalHost) {
+  if (isProductionHost) {
     API_BASE = PRODUCTION_API_BASE;
     return API_BASE;
   }
