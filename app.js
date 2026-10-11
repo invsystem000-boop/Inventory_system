@@ -11,6 +11,7 @@ const DEFAULT_API_BASE = isLocalHost ? LOCAL_API_BASE : PRODUCTION_API_BASE;
 const API_BASE_CANDIDATES = isLocalHost ? [LOCAL_API_BASE] : [PRODUCTION_API_BASE];
 let API_BASE = DEFAULT_API_BASE;
 
+
 const nativeFetch = typeof window !== 'undefined' && window.fetch ? window.fetch.bind(window) : null;
 if (nativeFetch) {
   window.fetch = (input, init = {}) => {
