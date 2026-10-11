@@ -66,21 +66,22 @@ function buildApiUrl(path, params = {}) {
 }
 
 async function resolveApiBase() {
+  if (!isLocalHost) {
+    API_BASE = PRODUCTION_API_BASE;
+    return API_BASE;
+  }
+
   const pageOrigin = (window && window.location && window.location.origin && window.location.origin !== 'null') ? window.location.origin : null;
   const pageHost = (window && window.location && window.location.hostname) ? window.location.hostname : 'localhost';
   const pagePort = (window && window.location && window.location.port) ? Number(window.location.port) : null;
 
   const candidates = [];
 
-  if (isLocalHost) {
-    if (pageOrigin && (pageOrigin === PRODUCTION_API_BASE || pageOrigin === LOCAL_API_BASE)) {
-      candidates.push(pageOrigin);
-    }
-    if (pagePort && (pageHost === 'localhost' || pageHost === '127.0.0.1')) {
-      candidates.push(`${window.location.protocol}//${pageHost}:${pagePort}`);
-    }
-  } else {
-    candidates.push(PRODUCTION_API_BASE);
+  if (pageOrigin && (pageOrigin === PRODUCTION_API_BASE || pageOrigin === LOCAL_API_BASE)) {
+    candidates.push(pageOrigin);
+  }
+  if (pagePort && (pageHost === 'localhost' || pageHost === '127.0.0.1')) {
+    candidates.push(`${window.location.protocol}//${pageHost}:${pagePort}`);
   }
 
   for (const base of API_BASE_CANDIDATES) {
@@ -96,6 +97,13 @@ async function resolveApiBase() {
       if (res.ok) {
         API_BASE = base;
         console.log('Using API base:', API_BASE, 'database:', getSelectedDatabaseName());
+        return base;
+      }
+      if (res.status === 401) {
+        console.warn('Session expired or unauthorized at', base, 'redirecting to login.');
+        localStorage.removeItem('inventoryUser');
+        localStorage.removeItem('inventoryLoggedIn');
+        window.location.replace('/index.html');
         return base;
       }
     } catch (err) {
@@ -1686,7 +1694,7 @@ if (logoutBtn) {
       localStorage.removeItem('inventoryUser');
       localStorage.removeItem('inventoryLoggedIn');
       document.cookie = 'inventory_session=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=None; Secure';
-      window.location.replace('/login.html');
+      window.location.replace('/index.html');
     }
   });
 }
@@ -1725,7 +1733,8 @@ function applyLocationVisibility() {
 
 function enforceAuthGuard() {
   const currentPath = window.location.pathname || '/';
-  const isLoginPage = currentPath === '/' || currentPath.endsWith('/login.html');
+  const isLoginPage = currentPath === '/' || currentPath.endsWith('/index.html') || currentPath.endsWith('/login.html');
+  const isDashboardPage = currentPath.endsWith('/dashboard.html');
   const loggedIn = localStorage.getItem('inventoryLoggedIn') === 'true';
   const savedUser = localStorage.getItem('inventoryUser');
 
@@ -1734,13 +1743,18 @@ function enforceAuthGuard() {
     localStorage.removeItem('inventoryLoggedIn');
 
     if (!isLoginPage) {
-      window.location.replace('/login.html');
+      window.location.replace('/index.html');
     }
     return;
   }
 
   if (isLoginPage) {
-    window.location.replace('/index.html');
+    window.location.replace('/dashboard.html');
+    return;
+  }
+
+  if (!isDashboardPage && !currentPath.endsWith('/dashboard.html')) {
+    window.location.replace('/dashboard.html');
     return;
   }
 
@@ -2083,6 +2097,12 @@ async function fetchCollections(requestToken = collectionsLoadToken) {
     if (res.ok) {
       console.log('Using API base:', base, 'database:', dbName);
       return await res.json();
+    }
+    if (res.status === 401) {
+      localStorage.removeItem('inventoryUser');
+      localStorage.removeItem('inventoryLoggedIn');
+      window.location.replace('/index.html');
+      return null;
     }
     console.warn('API not available at', base, res.status);
   } catch (e) {

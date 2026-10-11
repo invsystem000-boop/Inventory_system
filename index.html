@@ -152,7 +152,7 @@
             };
             localStorage.setItem('inventoryUser', JSON.stringify(sessionUser));
             localStorage.setItem('inventoryLoggedIn', 'true');
-            window.location.replace('/index.html?db=' + encodeURIComponent(getSelectedDb()));
+            window.location.replace('/dashboard.html?db=' + encodeURIComponent(getSelectedDb()));
             return;
           }
 
