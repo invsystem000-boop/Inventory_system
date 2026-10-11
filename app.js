@@ -10,6 +10,18 @@ const isProductionHost = !isLocalHost;
 const DEFAULT_API_BASE = isLocalHost ? LOCAL_API_BASE : PRODUCTION_API_BASE;
 const API_BASE_CANDIDATES = isLocalHost ? [LOCAL_API_BASE] : [PRODUCTION_API_BASE];
 let API_BASE = DEFAULT_API_BASE;
+
+const nativeFetch = typeof window !== 'undefined' && window.fetch ? window.fetch.bind(window) : null;
+if (nativeFetch) {
+  window.fetch = (input, init = {}) => {
+    const nextInit = { ...init };
+    if (!Object.prototype.hasOwnProperty.call(nextInit, 'credentials')) {
+      nextInit.credentials = 'include';
+    }
+    return nativeFetch(input, nextInit);
+  };
+}
+
 const LOCATION_DATABASES = {
   calamba: 'sample',
   bicol: 'sample2',
@@ -1694,7 +1706,7 @@ if (logoutBtn) {
   });
 }
 
-enforceAuthGuard();
+enforceAuthGuard().catch((err) => console.error('Auth guard failed:', err));
 
 function isAdminUser() {
   try {
@@ -1726,7 +1738,37 @@ function applyLocationVisibility() {
   applyUserAccessState();
 }
 
-function enforceAuthGuard() {
+function handleUnauthorizedRedirect() {
+  const currentPath = window.location.pathname || '/';
+  const isLoginPage = currentPath === '/' || currentPath.endsWith('/index.html') || currentPath.endsWith('/login.html');
+
+  localStorage.removeItem('inventoryUser');
+  localStorage.removeItem('inventoryLoggedIn');
+
+  if (!isLoginPage) {
+    window.location.replace('/index.html');
+  }
+}
+
+async function ensureAuthenticatedSession() {
+  try {
+    const response = await fetch(`${API_BASE}/api/session`, { cache: 'no-store' });
+    if (response.ok) {
+      return true;
+    }
+
+    if (response.status === 401 || response.status === 403) {
+      handleUnauthorizedRedirect();
+      return false;
+    }
+  } catch (err) {
+    console.warn('Unable to verify session with backend:', err);
+  }
+
+  return true;
+}
+
+async function enforceAuthGuard() {
   const currentPath = window.location.pathname || '/';
   const isLoginPage = currentPath === '/' || currentPath.endsWith('/index.html') || currentPath.endsWith('/login.html');
   const isDashboardPage = currentPath.endsWith('/dashboard.html');
@@ -1750,6 +1792,11 @@ function enforceAuthGuard() {
 
   if (!isDashboardPage && !currentPath.endsWith('/dashboard.html')) {
     window.location.replace('/dashboard.html');
+    return;
+  }
+
+  const authenticated = await ensureAuthenticatedSession();
+  if (!authenticated) {
     return;
   }
 
@@ -2083,8 +2130,7 @@ async function fetchCollections(requestToken = collectionsLoadToken) {
   const dbName = getSelectedDatabaseName();
   try {
     const res = await fetch(`${base}/api/collections?db=${encodeURIComponent(dbName)}`, {
-      cache: 'no-store',
-      credentials: 'include'
+      cache: 'no-store'
     });
     if (requestToken !== collectionsLoadToken) {
       return null;
@@ -2093,10 +2139,8 @@ async function fetchCollections(requestToken = collectionsLoadToken) {
       console.log('Using API base:', base, 'database:', dbName);
       return await res.json();
     }
-    if (res.status === 401) {
-      localStorage.removeItem('inventoryUser');
-      localStorage.removeItem('inventoryLoggedIn');
-      window.location.replace('/index.html');
+    if (res.status === 401 || res.status === 403) {
+      handleUnauthorizedRedirect();
       return null;
     }
     console.warn('API not available at', base, res.status);
@@ -2130,6 +2174,11 @@ async function loadCollections() {
     applyFilters();
   }
 
+  const sessionOk = await ensureAuthenticatedSession();
+  if (!sessionOk) {
+    return;
+  }
+
   const cols = await fetchCollections(requestToken);
   if (requestToken !== collectionsLoadToken) {
     return;
@@ -2139,9 +2188,9 @@ async function loadCollections() {
   if (!cols) {
     const item = document.createElement('li');
     item.className = 'loading-item';
-    item.textContent = 'Unable to reach API (see console)';
+    item.textContent = 'Session expired. Please log in again.';
     collectionSelect.appendChild(item);
-    console.error('Could not reach any API endpoints.');
+    console.warn('User session is no longer valid. Redirecting to login.');
     return;
   }
 
