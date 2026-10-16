@@ -3,6 +3,7 @@
 html,body{height:100%}
 .login-screen::before{content:'';position:fixed;inset:0;z-index:-2;background:rgba(6,45,92,0.35)}
 body{margin:0;font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background-color:var(--bg);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+*{box-sizing:border-box}
 
 /* Background image (place your image at assets/login-bg.jpg) */
 body{
@@ -16,6 +17,34 @@ body{
 .login-screen::before{content:'';position:fixed;inset:0;z-index:-1;background:linear-gradient(rgba(6,45,92,0.35),rgba(6,45,92,0.35));}
 .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px}
 .login-card{width:700px;max-width:96vw;background:var(--card);border-radius:12px;box-shadow:0 18px 40px rgba(2,6,23,0.18);padding:30px;position:relative}
+
+@media (max-width: 720px){
+  .login-screen{padding:20px 12px}
+  .login-card{width:min(100%, 460px);max-width:100%;padding:18px 14px}
+  .brand{margin-bottom:14px}
+  .brand h2{font-size:26px;line-height:1.2}
+  .brand p{font-size:12px}
+  .controls{flex-direction:column;align-items:flex-start;gap:10px}
+  .btn-row{display:flex;flex-direction:column;align-items:stretch;gap:10px}
+  .btn-login{width:100%}
+  .small-footer{font-size:12px}
+}
+
+@media (max-width: 480px){
+  .login-screen{padding:14px 10px}
+  .login-card{padding:16px 12px;border-radius:10px}
+  .brand .logo{font-size:12px;padding:8px 10px;line-height:1.25}
+  .brand h2{font-size:22px}
+  .brand p{margin-top:8px}
+  .form-row{gap:10px}
+  input[type="text"],input[type="password"],#localSelect{padding:11px 12px}
+  .checkbox-label{font-size:12px}
+  .controls a{font-size:11px}
+  .small-footer .site-badge{display:inline-block;max-width:100%;padding:7px 10px}
+  .modal-content{padding:16px 14px}
+  .modal-actions{flex-direction:column-reverse}
+  .btn-cancel,.modal-content .btn-login{width:100%}
+}
 .login-layout{display:flex;flex-direction:column;gap:16px}
 .login-panel{flex:1;min-width:0}
 .brand{display:flex;flex-direction:column;align-items:center;margin-bottom:18px}
