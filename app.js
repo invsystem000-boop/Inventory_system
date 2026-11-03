@@ -136,6 +136,11 @@ const tutorialBtn = document.getElementById('tutorialBtn');
 const profileBtn = document.getElementById('profileBtn');
 const tutorialModal = document.getElementById('tutorialModal');
 const closeTutorialModal = document.getElementById('closeTutorialModal');
+const tutorialRoleBadge = document.getElementById('tutorialRoleBadge');
+const tutorialSummary = document.getElementById('tutorialSummary');
+const tutorialPanelTitle = document.getElementById('tutorialPanelTitle');
+const tutorialList = document.getElementById('tutorialList');
+const tutorialTips = document.getElementById('tutorialTips');
 const locationSwitchOptions = document.querySelectorAll('.location-switch-option');
 const activeDbBadge = document.getElementById('activeDbBadge');
 const addCollectionBtn = document.getElementById('addCollectionBtn');
@@ -1685,9 +1690,70 @@ if (profileBtn) {
   });
 }
 
+const tutorialContentMap = {
+  staff: {
+    badge: 'Staff',
+    summary: 'Staff can keep the inventory moving by checking stock, processing orders, and staying on top of daily updates.',
+    title: 'Your Tasks',
+    steps: [
+      'Search inventory and quickly find products by model, brand, or part number.',
+      'Review stock levels and product details before processing an order or restock.',
+      'Use Process Order to record incoming requests and keep records accurate.',
+      'Check Low Stock and saved records so you can act before items run out.'
+    ],
+    tips: [
+      'Use the search box to narrow the list before editing or processing data.',
+      'Always review the selected collection before saving an order.',
+      'If a record looks wrong, check the date and part details before finalizing it.'
+    ]
+  },
+  admin: {
+    badge: 'Admin',
+    summary: 'Admins manage the full system, from user access to location controls and inventory setup.',
+    title: 'Your Tasks',
+    steps: [
+      'Open the staff and admin account list to manage roles, verification, and access.',
+      'Switch between Calamba, Bicol, and Quezon to review different inventory locations.',
+      'Add new collections and keep the inventory structure organized across the site.',
+      'Monitor records and overall operations to maintain accurate stock control.'
+    ],
+    tips: [
+      'Use the user account list to update verified status and admin permissions carefully.',
+      'Check the active location before making changes or reviewing records.',
+      'Keep collection names clear so staff can find the correct inventory quickly.'
+    ]
+  }
+};
+
+function updateTutorialContent() {
+  const role = isAdminUser() ? 'admin' : 'staff';
+  const tutorialData = tutorialContentMap[role] || tutorialContentMap.staff;
+
+  if (tutorialRoleBadge) {
+    tutorialRoleBadge.textContent = tutorialData.badge;
+  }
+
+  if (tutorialSummary) {
+    tutorialSummary.textContent = tutorialData.summary;
+  }
+
+  if (tutorialPanelTitle) {
+    tutorialPanelTitle.textContent = tutorialData.title;
+  }
+
+  if (tutorialList) {
+    tutorialList.innerHTML = tutorialData.steps.map((item) => `<li>${item}</li>`).join('');
+  }
+
+  if (tutorialTips) {
+    tutorialTips.innerHTML = tutorialData.tips.map((item) => `<li>${item}</li>`).join('');
+  }
+}
+
 if (tutorialBtn) {
   tutorialBtn.addEventListener('click', () => {
     if (!tutorialModal) return;
+    updateTutorialContent();
     tutorialModal.setAttribute('aria-hidden', 'false');
   });
 }

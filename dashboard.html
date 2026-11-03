@@ -183,28 +183,27 @@
 
     <div id="tutorialModal" class="modal" aria-hidden="true">
       <div class="modal-content tutorial-modal-content" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle">
-        <div class="records-header-row">
-          <h2 id="tutorialTitle">Site Overview</h2>
+        <div class="records-header-row tutorial-header-row">
+          <div class="tutorial-header-copy">
+            <h2 id="tutorialTitle">Tutorial</h2>
+            <span id="tutorialRoleBadge" class="tutorial-role-badge">Staff</span>
+          </div>
           <button type="button" id="closeTutorialModal" class="toolbar-btn secondary">Close</button>
         </div>
+
+        <div class="tutorial-hero">
+          <div class="tutorial-hero-icon" aria-hidden="true">📦</div>
+          <p id="tutorialSummary">Use this dashboard to keep stock accurate and operations moving every day.</p>
+        </div>
+
         <div class="tutorial-content">
-          <div class="tutorial-panel">
-            <h3>Staff</h3>
-            <ul class="tutorial-list">
-              <li>Search for items and quickly check stock levels.</li>
-              <li>Open part collections and review product details.</li>
-              <li>Process orders and restocks for daily inventory work.</li>
-              <li>Check low-stock alerts and saved records to keep operations moving.</li>
-            </ul>
+          <div class="tutorial-panel tutorial-panel-primary">
+            <h3 id="tutorialPanelTitle">Your Tasks</h3>
+            <ul id="tutorialList" class="tutorial-list"></ul>
           </div>
-          <div class="tutorial-panel">
-            <h3>Admin</h3>
-            <ul class="tutorial-list">
-              <li>Manage user access, roles, and verification in the account list.</li>
-              <li>Switch between Calamba, Bicol, and Quezon inventory locations.</li>
-              <li>Add new collections and control the overall system setup.</li>
-              <li>Review records and maintain full inventory oversight across the site.</li>
-            </ul>
+          <div class="tutorial-panel tutorial-panel-secondary">
+            <h3>Quick Tips</h3>
+            <ul id="tutorialTips" class="tutorial-list"></ul>
           </div>
         </div>
       </div>
