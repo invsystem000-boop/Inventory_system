@@ -132,7 +132,10 @@ const uploadFileInput = document.getElementById('uploadFileInput');
 const processOrderBtn = document.getElementById('processOrderBtn');
 const lowStockBtn = document.getElementById('lowStockBtn');
 const recordsBtn = document.getElementById('recordsBtn');
+const tutorialBtn = document.getElementById('tutorialBtn');
 const profileBtn = document.getElementById('profileBtn');
+const tutorialModal = document.getElementById('tutorialModal');
+const closeTutorialModal = document.getElementById('closeTutorialModal');
 const locationSwitchOptions = document.querySelectorAll('.location-switch-option');
 const activeDbBadge = document.getElementById('activeDbBadge');
 const addCollectionBtn = document.getElementById('addCollectionBtn');
@@ -1679,6 +1682,28 @@ if (profileBtn) {
     modal.classList.remove('hidden');
     modal.setAttribute('aria-hidden', 'false');
     await loadUserAccounts();
+  });
+}
+
+if (tutorialBtn) {
+  tutorialBtn.addEventListener('click', () => {
+    if (!tutorialModal) return;
+    tutorialModal.setAttribute('aria-hidden', 'false');
+  });
+}
+
+if (closeTutorialModal) {
+  closeTutorialModal.addEventListener('click', () => {
+    if (!tutorialModal) return;
+    tutorialModal.setAttribute('aria-hidden', 'true');
+  });
+}
+
+if (tutorialModal) {
+  tutorialModal.addEventListener('click', (event) => {
+    if (event.target === tutorialModal) {
+      tutorialModal.setAttribute('aria-hidden', 'true');
+    }
   });
 }
 

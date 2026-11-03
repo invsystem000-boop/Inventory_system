@@ -314,6 +314,48 @@ body{
 .account-list-table{min-width:360px}
 .profile-float-btn.hidden{ display:none; }
 
+.tutorial-modal-content{
+  max-width:760px;
+  width:min(760px, 90vw);
+}
+
+.tutorial-content{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:22px;
+  padding-top:8px;
+}
+
+.tutorial-panel{
+  background:#f8f7ff;
+  border:1px solid #e9d5ff;
+  border-radius:14px;
+  padding:16px 18px;
+}
+
+.tutorial-panel h3{
+  margin:0 0 12px;
+  font-size:22px;
+  color:#4c1d95;
+}
+
+.tutorial-list{
+  margin:0;
+  padding-left:20px;
+  color:#1f2937;
+  line-height:1.7;
+}
+
+.tutorial-list li + li{
+  margin-top:6px;
+}
+
+@media (max-width: 700px) {
+  .tutorial-content {
+    grid-template-columns:1fr;
+  }
+}
+
 .collection-prompt-actions{
   display:flex;
   justify-content:flex-end;
