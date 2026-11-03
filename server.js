@@ -228,6 +228,52 @@ app.post('/api/collections', requireAuth, async (req, res) => {
   }
 });
 
+app.post('/api/register', async (req, res) => {
+  try {
+    const { name, username, password, role } = req.body || {};
+    const safeName = String(name || '').trim();
+    const safeUsername = String(username || '').trim();
+    const safePassword = String(password || '');
+
+    if (!safeName || !safeUsername || !safePassword) {
+      return res.status(400).json({ error: 'Name, username, and password are required' });
+    }
+
+    if (safePassword.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+    }
+
+    const targetDb = dbClient ? dbClient.db(AUTH_DB_NAME) : await connect(AUTH_DB_NAME);
+    const accountCollection = targetDb.collection('account');
+    const existingUser = await accountCollection.findOne({ username: { $regex: new RegExp(`^${safeUsername.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } });
+
+    if (existingUser) {
+      return res.status(409).json({ error: 'Username already exists' });
+    }
+
+    const hashedPassword = await hashPassword(safePassword);
+    const newUser = {
+      name: safeName,
+      username: safeUsername,
+      password: hashedPassword,
+      role: String(role || 'user').toLowerCase(),
+      verified: false,
+      createdAt: new Date()
+    };
+
+    const result = await accountCollection.insertOne(newUser);
+    return res.status(201).json({
+      insertedId: result.insertedId,
+      username: safeUsername,
+      role: newUser.role,
+      verified: false
+    });
+  } catch (err) {
+    console.error('Error registering account:', err);
+    return res.status(500).json({ error: String(err) });
+  }
+});
+
 app.post('/api/collections/:name', requireAuth, async (req, res) => {
   try {
     const collectionName = req.params.name;

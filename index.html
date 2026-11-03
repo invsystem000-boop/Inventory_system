@@ -213,8 +213,10 @@
 
         regError.textContent = 'Creating account...';
         try{
-          const res = await fetch(buildAuthUrl('api/collections/account'), {
-            method: 'POST', headers:{'Content-Type':'application/json'},
+          const res = await fetch(buildAuthUrl('api/register'), {
+            method: 'POST',
+            headers:{'Content-Type':'application/json'},
+            credentials: 'include',
             body: JSON.stringify({ name, username, password, role: 'user' })
           });
           const body = await res.json().catch(()=>({}));
